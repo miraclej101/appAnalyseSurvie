@@ -8,6 +8,7 @@ from lifelines import KaplanMeierFitter
 from pandas.api.types import is_string_dtype
 from pandas.api.types import is_numeric_dtype
 import seaborn as sns
+import math
 
 # Configurer la page de l'application
 st.set_page_config(layout="wide")
@@ -47,7 +48,7 @@ with st.sidebar :
 
 # Main affichage
 selected = option_menu("Analyse de suivre", ["Lecture des données", "Traitement des données manquantes", "Statistiques descriptives",
-        "Représentations graphiques des variables","Probabilités de suivre et courbres de suivre","Prédiction de suivre d'un individu",
+        "Représentations graphiques des variables","Probabilités de survie et courbes de survie","Prédiction de survie d'un individu",
         "Modèle de régression de Cox","Analyse coût-efficacité"], 
         icons=['book-fill', 'file-spreadsheet-fill', "clipboard-data", 'bar-chart-fill',"graph-down","person-bounding-box",
         "graph-up","currency-euro"], 
@@ -88,7 +89,6 @@ if selected =="Traitement des données manquantes" :
         with col1 :
              selected_col = st.sidebar.selectbox("Sélectionner une colonne à traiter", columns, key="column")
              st.markdown("#### :orange[Transformer un type de donnée dans la conlonne sélectée]")
-        #    selected_col = st.selectbox("Sélectionner une colonne à traiter", columns, key="column")
         with col2 :
             selected_type = st.selectbox("Sélectionner un type de donnée :",('object','numérique','category','datetime','bool'))
             if st.button("Transformer") and selected_col is not None :
@@ -98,7 +98,6 @@ if selected =="Traitement des données manquantes" :
                     data[selected_col] = pd.to_numeric(data[selected_col])
                 else :
                     data[selected_col] = pd.to_datetime(data[selected_col], format='%d/%m/%Y')
-                #st.session_state.dataFrame = data
         
         col3, col4 =st.columns(2)
         with col3 :
@@ -127,8 +126,6 @@ if selected =="Traitement des données manquantes" :
                     # Choisir le première valeur de mode trouvée
                     data[selected_col].fillna(val[0], inplace=True)
                 st.experimental_rerun()
-               
-         #   st.session_state.dataFrame = data
          
         col5, col6 =st.columns(2)
         with col5 :
@@ -172,10 +169,10 @@ if selected =="Traitement des données manquantes" :
 #Rubrique Statistiques descriptives
 if selected == "Statistiques descriptives" :
     data = st.session_state.dataFrame
- #   st.sidebar.multiselect("Multi colonnes sélectables", data.columns)
-    st.write(data.describe())
+    if len(data.columns) != 0 :
+        st.write(data.describe())
 
-#Function à montrer des correlations entre variables  
+#Fonction à montrer des correlations entre variables  
 @st.cache_data
 def plotCorr(df) :
     matrix_corr = df.corr().round(2)
@@ -183,14 +180,14 @@ def plotCorr(df) :
     sns.heatmap(data=matrix_corr,linewidths=0.3, annot=True)
     st.pyplot(fig)
 
-#Function à dessiner des plots de correlations entre variables  
+#Fonction à dessiner des plots de correlations entre variables  
 @st.cache_data 
 def plotPairGraph(df,event) :
     plt.figure(figsize=(12,12)) 
     sns.pairplot(df,hue=event)
     st.pyplot(plt)
 
-#Function à dessiner l'histogramme par type de l'ensemble    
+#Fonction à dessiner l'histogramme par type de l'ensemble    
 @st.cache_data
 def histogramme(data, col,limit='') :
     plt.figure(figsize=(5,5))
@@ -208,6 +205,12 @@ def columsNumeric(data) :
             if is_numeric_dtype(data[col]) :
                 colNum.append(col)
     return colNum
+
+#Fonction à trouver les colonnes non numérique
+def columnsNoNum(df,colNum) :
+    colNoNum = list(set(df.columns) - set(colNum))
+    colNoNum.sort(key=str.lower)
+    return colNoNum
 
 #Rubrique Représentations graphiques des variables
 if selected == "Représentations graphiques des variables" :
@@ -227,13 +230,9 @@ if selected == "Représentations graphiques des variables" :
         #Histogramme
         #Créer une liste des colonnes numériques sur le sidebar
         colNum = columsNumeric(df)
-   #     print("colNum = ",colNum)
         st.sidebar.subheader(":orange[Histogramme :]")
         histCol = st.sidebar.selectbox("Sélectionner une colonne", colNum)
-        colNoNum = list(set(df.columns) - set(colNum))
-        colNoNum.sort(key=str.lower)
-  #      print("\ndata_cols = ",df.columns)
-  #      print("colNoNum = ",colNoNum)
+        colNoNum = columnsNoNum(df, colNum)
         checkCrit = st.sidebar.checkbox("avec un critère") 
         if checkCrit:
             limit = st.sidebar.selectbox("Sélectionner un critère par une colonne en dessous", colNoNum )
@@ -244,3 +243,69 @@ if selected == "Représentations graphiques des variables" :
                 histogramme(data, histCol, limit)
             else :
                 histogramme(data, histCol)
+
+#Fonction à trouver et à afficher la survival function par Kaplan-Meier
+@st.cache_data
+def kaplanMeyer(data,col_duration,col_event,montre_ci,crit) :
+    title_table = "Proportion de survivants et confidence interval à l'instant t"
+    title_graph = "Survival function"
+    kmf = KaplanMeierFitter()
+    if crit == "":
+        kmf.fit(data[col_duration], data[col_event])
+        #Afficher des tables de suivival function et confidence interval
+        st.subheader(title_table)
+        survival = kmf.survival_function_
+        ci = kmf.confidence_interval_
+        table = survival.join(ci)
+        table
+        #Réprrésenter graphiquement la courbre de survie avec l'interval de confiance
+        ax = plt.subplot(2,2,1)
+        kmf.plot_survival_function(ax=ax,title=title_graph, ci_show=montre_ci)
+        ax.set_ylabel("Probabilités de survie, S(t)",fontsize="x-small")
+        st.pyplot(fig=plt)
+    else :
+        critArray = data[crit].unique()
+        nbRow = math.ceil(len(critArray)/3)
+        fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+        axes = axes.ravel()
+        i = 0
+        for val, ax in zip(critArray,axes) :
+            ix = data[crit] == val
+            kmf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
+            kmf.plot_survival_function(ax=ax, ci_show=montre_ci, legend =False)
+            ax.set_title(val)
+            plt.xlim(0, data[col_duration].max())
+            if i == 0 :
+                ax.set_ylabel("Probabilités de survie")
+            i+=1
+      #      st.subheader(title_table)
+      #      survival = kmf.survival_function_
+      #      ci = kmf.confidence_interval_
+      #      table1 = survival.join(ci)
+      #      table1
+        for i, ax in enumerate(axes) :
+            if i >= len(critArray) :
+                fig.delaxes(ax)
+        plt.tight_layout()
+        st.pyplot(fig=plt)
+
+#Rubrique Probabilités de survie et courbres de survie
+if selected == "Probabilités de survie et courbes de survie" :
+    data = st.session_state.dataFrame
+    if len(data.columns) != 0 :
+        df = data.iloc[:,1:]
+        colNum = columsNumeric(df)
+        colNoNum = columnsNoNum(df, colNum)
+        st.sidebar.subheader(":orange[Fonction de survie : Kaplan-Meier]")
+        col_duration = st.sidebar.selectbox("Sélectionner une colonne pour une durée ", data.columns)
+        col_event = st.sidebar.selectbox("Sélectionner une colonne pour un événement", data.columns)
+        chkCrit = st.sidebar.checkbox("Estimer en critère.")
+        crit =""
+        if chkCrit :
+            crit =  st.sidebar.selectbox("Sélectionner un critère de données :", colNoNum)
+        montre_ci = st.sidebar.checkbox("Montre l'intervalle de confiance dans le graphique de survival function", value=True) 
+        st.warning("Veuillez sélectionner bien des colonnes de la durée et de l'événement et un critère si besoin",icon="⚠️" )
+        if st.button("Afficher la fonction de survie") :
+            kaplanMeyer(data, col_duration, col_event, montre_ci, crit)
+        
+    
