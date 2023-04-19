@@ -14,6 +14,7 @@ from lifelines import NelsonAalenFitter
 from lifelines import WeibullFitter
 from io import StringIO
 import sys
+import pickle
 
 # Configurer la page de l'application
 st.set_page_config(layout="wide")
@@ -84,17 +85,21 @@ if selected == "Lecture des données" :
         data   
 
 # sauvegarder le dataframe d'origine pour undo le traitement
-st.session_state.oldDataframe = st.session_state.dataFrame.copy()
+st.session_state.oldDataframe = pickle.loads(pickle.dumps(st.session_state.dataFrame))  
+#print("avant de traitement, oldDf",st.session_state.oldDataframe)
 # Rubrique Traitement des données manquantes
+data = st.session_state.dataFrame
 if selected =="Traitement des données manquantes" :
-    data = st.session_state.dataFrame
     if len(data.columns) != 0 :
         data
         data.dtypes
-     #   if st.button("Undo le traitement") :
-     #       data = st.session_state.oldDataframe.copy()
-     #       st.experimental_rerun()
-        st.session_state.oldDataframe = data.copy()
+   #     print("data",data.loc[6,"AdherenciaTtoMM1Mto1"])
+        #Undo button pour revenir la version dernière de data
+   #     if st.button("Undo le traitement") :
+   #        print("oldDf",st.session_state.oldDataframe.loc[6,"AdherenciaTtoMM1Mto1"])
+   #        data = pickle.loads(pickle.dumps(st.session_state.oldDataframe)) 
+   #        print("data après undo",data.loc[6,"AdherenciaTtoMM1Mto1"])
+   #        st.experimental_rerun()
         columns = data.columns
         col1, col2 = st.columns(2)
         with col1 :
@@ -103,6 +108,7 @@ if selected =="Traitement des données manquantes" :
         with col2 :
             selected_type = st.selectbox("Sélectionner un type de donnée :",('object','numérique','category','datetime','bool'))
             if st.button("Transformer") and selected_col is not None :
+     #           st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
                 if selected_type == "object" or selected_type == "category" or selected_type == "bool" :
                     data[selected_col] = data[selected_col].astype(selected_type)
                 elif selected_type == "numérique" :
@@ -129,6 +135,8 @@ if selected =="Traitement des données manquantes" :
                 val = calculVal(method, serie)
                 st.markdown(f"Valeur = {val}")
             if st.button("Remplacer") :
+    #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
+                print("oldDf",st.session_state.oldDataframe.loc[6,"AdherenciaTtoMM1Mto1"])
                 if text != "" :
                     data[selected_col].fillna(text, inplace=True)
                 elif method != "mode" :     
@@ -148,6 +156,7 @@ if selected =="Traitement des données manquantes" :
                          ('any','all'), index=1)
             st.error("Voulez-vous supprimer les lignes de données manquantes?", icon="🚨")
             if st.button("Oui, supprimer ces lignes") :
+    #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
                 if delete_line == 'any' :
                     data.dropna(axis=0, how='any', inplace=True)
                 elif delete_line =='all' :
@@ -163,6 +172,7 @@ if selected =="Traitement des données manquantes" :
                          ('any','all'), index=1)
             st.error("Voulez-vous supprimer les colonnes de données manquantes?", icon="🚨")
             if st.button("Oui, supprimer ces colonnes") :
+    #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
                 if delete_column == 'any' :
                     data.dropna(axis=1, how='any', inplace=True)
                 elif delete_column =='all' :
@@ -178,6 +188,7 @@ if selected =="Traitement des données manquantes" :
                         mime="text/csv") 
 
 #Rubrique Statistiques descriptives
+st.session_state.dataFrame = data
 if selected == "Statistiques descriptives" :
     data = st.session_state.dataFrame
     if len(data.columns) != 0 :
@@ -204,8 +215,12 @@ def histogramme(data, col,limit='') :
     plt.figure(figsize=(5,5))
     if limit in data.columns :
         data.hist(column=col,by=limit)   
+        plt.title('Title', fontsize=12)
+        plt.show()
     else :
-        data.hist(column=col) 
+        data.hist(column=col)
+        plt.title('Title', fontsize=12) 
+        plt.show()
     st.pyplot(plt)
 
 #Function à trouver les colonnes avec  un type numéric
@@ -669,7 +684,12 @@ def kaplanMeierPredict(data, col_duration, col_event,crit,time_predict,col_ent_t
             st.write("%.2f" % kmf.predict(time_predict, interpolate=True))
         else :
             pass
-    
+            #kmf.fit(data.loc[])
+    else :
+        if crit == "" :
+            kmf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard])
+            st.write("%.2f" % kmf.predict(time_predict, interpolate=True))
+
 #Rubrique Prédiction de survie d'un individu
 if selected == "Prédiction de survie d'un individu" :
     data = st.session_state.dataFrame
@@ -680,6 +700,8 @@ if selected == "Prédiction de survie d'un individu" :
         col_event = st.sidebar.selectbox("Sélectionner une colonne pour un événement", data.columns)
         chkCrit = st.sidebar.checkbox("Estimer en critère.")
         crit =""
+        colNum = columsNumeric(data.iloc[:,1:])
+        colNoNum = columnsNoNum(data.iloc[:,1:], colNum)
         if chkCrit :
             crit =  st.sidebar.selectbox("Sélectionner un critère de données :", colNoNum)
         ent_tard = st.sidebar.checkbox("Consider les entrées tardive")
@@ -693,7 +715,7 @@ if selected == "Prédiction de survie d'un individu" :
                     ,min_value=1, max_value = 2*maxTime, value = 1, step= 1)
         if st.button("Afficher une prediction de la fonction de survie") :
             if ent_tard :
-               pass
+                kaplanMeierPredict(data, col_duration, col_event, crit, time_predict,col_ent_tard)
             else :
                 kaplanMeierPredict(data, col_duration, col_event, crit, time_predict)
             
