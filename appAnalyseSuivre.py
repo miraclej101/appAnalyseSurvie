@@ -104,7 +104,7 @@ if selected =="Traitement des données manquantes" :
         col1, col2 = st.columns(2)
         with col1 :
              selected_col = st.sidebar.selectbox("Sélectionner une colonne à traiter", columns, key="column")
-             st.markdown("#### :orange[Transformer un type de donnée dans la conlonne sélectée]")
+             st.markdown("#### :orange[Transformer un type de donnée dans la colonne sélectionnée]")
         with col2 :
             selected_type = st.selectbox("Sélectionner un type de donnée :",('object','numérique','category','datetime','bool'))
             if st.button("Transformer") and selected_col is not None :
@@ -118,7 +118,7 @@ if selected =="Traitement des données manquantes" :
         
         col3, col4 =st.columns(2)
         with col3 :
-            st.markdown("#### Remplacer les données manquantes dans la colonne sélectionée par :")
+            st.markdown("#### Remplacer les données manquantes dans la colonne sélectionnée par :")
         
         with col4 :
             if is_numeric_dtype(data[selected_col]) :
