@@ -89,10 +89,13 @@ st.session_state.oldDataframe = pickle.loads(pickle.dumps(st.session_state.dataF
 #print("avant de traitement, oldDf",st.session_state.oldDataframe)
 # Rubrique Traitement des données manquantes
 data = st.session_state.dataFrame
+#data = data.convert_dtypes()
 if selected =="Traitement des données manquantes" :
     if len(data.columns) != 0 :
         data
-        data.dtypes
+        df_miss_data = pd.DataFrame({'Cols' : data.columns, 'Types' : np.array(data.dtypes), 'NANs' : np.array(data.isna().sum())})
+        df_miss_data
+        #df_miss_data.dtypes
    #     print("data",data.loc[6,"AdherenciaTtoMM1Mto1"])
         #Undo button pour revenir la version dernière de data
    #     if st.button("Undo le traitement") :
@@ -118,16 +121,23 @@ if selected =="Traitement des données manquantes" :
         
         col3, col4 =st.columns(2)
         with col3 :
-            st.markdown("#### Remplacer les données manquantes dans la colonne sélectionnée par :")
+            st.markdown("#### :orange[Remplacer les données manquantes dans la colonne sélectionnée par :]")
         
         with col4 :
             if is_numeric_dtype(data[selected_col]) :
                 radio_disabled = False
-                text_disabled = True
+                selected_text_disabled = True     
             else :
                 radio_disabled = True
+                selected_text_disabled = False
+               
+            text_disabled = True
+            list_selected_text = list(data[selected_col].unique())
+            list_selected_text.append("Autre") 
+            selected_text = st.selectbox("Sélectionner une value existant dans la colonne :", list_selected_text, disabled=selected_text_disabled)
+            print(selected_text)
+            if selected_text == "Autre" :
                 text_disabled = False
-
             text = st.text_input("Entrer un mot :", disabled=text_disabled)
             method = st.radio("Choisir une façon à remplacer :",("mean","median","mode"), key = "methodNumeric",disabled=radio_disabled)
             serie = st.session_state.dataFrame[st.session_state.column]
@@ -136,9 +146,11 @@ if selected =="Traitement des données manquantes" :
                 st.markdown(f"Valeur = {val}")
             if st.button("Remplacer") :
     #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
-                print("oldDf",st.session_state.oldDataframe.loc[6,"AdherenciaTtoMM1Mto1"])
+            #    print("oldDf",st.session_state.oldDataframe.loc[6,"AdherenciaTtoMM1Mto1"])
                 if text != "" :
                     data[selected_col].fillna(text, inplace=True)
+                elif not(selected_text_disabled) and selected_text != "Autre" :
+                    data[selected_col].fillna(selected_text, inplace=True)
                 elif method != "mode" :     
                     data[selected_col].fillna(val, inplace=True)
                 else :
@@ -148,7 +160,7 @@ if selected =="Traitement des données manquantes" :
          
         col5, col6 =st.columns(2)
         with col5 :
-            st.markdown("#### ou supprimer les lignes de données manquantes en critère :")
+            st.markdown("#### :orange[ou supprimer les lignes de données manquantes en critère :]")
 
         with col6 :
             delete_line = st.radio("""any : Si des valeurs NA sont présentes, supprimez cette ligne. 
@@ -165,7 +177,7 @@ if selected =="Traitement des données manquantes" :
 
         col7, col8 =st.columns(2) 
         with col7 :
-            st.markdown("#### ou supprimer les colonnes de données manquantes en critère :") 
+            st.markdown("#### :orange[ou supprimer les colonnes de données manquantes en critère :]") 
         with col8 :
             delete_column = st.radio("""any : Si des valeurs NA sont présentes, supprimez cette colonne. 
                                     all : Si toutes les valeurs sont NA, supprimez cette colonne.""",
@@ -181,7 +193,7 @@ if selected =="Traitement des données manquantes" :
     # Après le traitement , on peut enregistrer les données en fichiers csv
     col9, col10 = st.columns(2)
     with col9 :
-        st.markdown("### Enregistre le fichier :")
+        st.markdown("### :orange[Enregistre le fichier :]")
         delimiter = st.selectbox("Sélectionner un délimiteur :", (",",";","|"))
         st.download_button("Enregistre le fichier csv",
                         data.to_csv(sep=delimiter,encoding="utf_8"),
@@ -214,13 +226,9 @@ def plotPairGraph(df,event) :
 def histogramme(data, col,limit='') :
     plt.figure(figsize=(5,5))
     if limit in data.columns :
-        data.hist(column=col,by=limit)   
-        plt.title('Title', fontsize=12)
-        plt.show()
+        data.hist(column=col,by=limit)       
     else :
         data.hist(column=col)
-        plt.title('Title', fontsize=12) 
-        plt.show()
     st.pyplot(plt)
 
 #Function à trouver les colonnes avec  un type numéric
