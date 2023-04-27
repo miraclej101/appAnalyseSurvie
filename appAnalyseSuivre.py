@@ -280,7 +280,7 @@ if selected == "Représentations graphiques des variables" :
 
 #Fonction à trouver et à afficher la survival function par Kaplan-Meier
 @st.cache_data
-def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,col_ent_tard="") :
+def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,isGrid,col_ent_tard="") :
     title_table = "Proportion de survivants et confidence interval à l'instant t"
     title_graph = "Survival function"
     kmf = KaplanMeierFitter()
@@ -300,25 +300,10 @@ def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,col_ent_tard="") :
             ax.set_ylabel("Probabilités de survie, S(t)",fontsize="x-small")
             st.pyplot(fig=plt)
         else :
-            critArray = data[crit].unique()
-            nbRow = math.ceil(len(critArray)/3)
-            fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
-            axes = axes.ravel()
-            i = 0
-            for val, ax in zip(critArray,axes) :
-                ix = data[crit] == val
-                kmf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
-                kmf.plot_survival_function(ax=ax, ci_show=montre_ci, legend =False)
-                ax.set_title(val)
-                plt.xlim(0, data[col_duration].max())
-                if i == 0 :
-                    ax.set_ylabel("Probabilités de survie")
-                i+=1
-            for i, ax in enumerate(axes) :
-                if i >= len(critArray) :
-                    fig.delaxes(ax)
-            plt.tight_layout()
-            st.pyplot(fig=plt)
+            if isGrid :
+                plotKmfGrid_survival_function(data, col_duration, col_event, montre_ci, crit)
+            else :
+                plotKmf_survival_function(data,col_duration,col_event,montre_ci,crit)
     else :
         if crit == "":
             kmf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard], label="Modéle d'entrée tardive")
@@ -367,7 +352,40 @@ def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,col_ent_tard="") :
                     fig.delaxes(ax)
             plt.tight_layout()
             st.pyplot(fig=plt)
-    
+
+def plotKmfGrid_survival_function(data,col_duration,col_event,montre_ci,crit) :
+    kmf = KaplanMeierFitter()
+    critArray = data[crit].unique()
+    nbRow = math.ceil(len(critArray)/3)
+    fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+    axes = axes.ravel()
+    i = 0
+    for val, ax in zip(critArray,axes) :
+        ix = data[crit] == val
+        kmf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
+        kmf.plot_survival_function(ax=ax, ci_show=montre_ci, legend =False)
+        ax.set_title(val)
+        plt.xlim(0, data[col_duration].max())
+        if i == 0 :
+            ax.set_ylabel("Probabilités de survie")
+        i+=1
+    for i, ax in enumerate(axes) :
+        if i >= len(critArray) :
+            fig.delaxes(ax)
+    plt.tight_layout()
+    st.pyplot(fig=plt)   
+
+def plotKmf_survival_function(data,col_duration,col_event,montre_ci,crit) :
+    kmf = KaplanMeierFitter()
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    for val in critArray :
+        ix = data[crit] == val
+        kmf.fit(data.loc[ix,col_duration], data.loc[ix,col_event], label=val)
+        kmf.plot_survival_function(ax=ax, ci_show=montre_ci, legend = True)
+    ax.set_title("Fonction de survie", fontsize="x-small")
+    ax.set_ylabel("Probabilités de survie", fontsize="x-small")
+    st.pyplot(fig=plt)
 
 def nelsonAalen(data,col_duration,col_event,montre_ci,crit,bandwidth,col_ent_tard="") :
     naf = NelsonAalenFitter()
@@ -665,12 +683,13 @@ if selected == "Probabilités de survie et courbes de survie" :
             col_ent_tard = st.sidebar.selectbox("Sélectionner une colonne pour les entrées tardives", data.columns)
         montre_ci = st.sidebar.checkbox("Montre l'intervalle de confiance dans le graphique de survival function", value=True) 
         bandwidth = st.sidebar.slider("Choisir un nombre de bandwidth pour la function risque par le modèle Nelson-Aalen",1,10,1)
+        isGrid = st.sidebar.checkbox("Montre sur grille")
         st.warning("Veuillez sélectionner bien des colonnes de la durée et de l'événement et un critère si besoin",icon="⚠️" )
         if st.button("Afficher la fonction de survie") :
             if ent_tard :
-                kaplanMeyer(data, col_duration, col_event, montre_ci, crit,col_ent_tard)
+                kaplanMeyer(data, col_duration, col_event, montre_ci, crit,isGrid,col_ent_tard)
             else :
-                kaplanMeyer(data, col_duration, col_event, montre_ci, crit)
+                kaplanMeyer(data, col_duration, col_event, montre_ci, crit,isGrid)
         
         st.subheader("La function risque ou Hazard rates")
         if st.button("Afficher par le modéle Nelson-Aalen") :
