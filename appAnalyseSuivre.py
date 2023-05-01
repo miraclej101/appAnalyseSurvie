@@ -17,15 +17,15 @@ import sys
 import pickle
 
 # Configurer la page de l'application
-st.set_page_config(layout="wide")
+st.set_page_config(layout = "wide")
 global data, val
-val =""
+val = ""
 #Initialise session state of une clé dataFrame pour passer travers menus
 if "dataFrame" not in st.session_state :
     st.session_state.dataFrame = pd.DataFrame()
 
-def load_data(file,delimiter,encode) :
-    data = pd.read_csv(file, sep=delimiter, encoding=encode)
+def load_data(file, delimiter, encode) :
+    data = pd.read_csv(file, sep = delimiter, encoding = encode)
     return data
 
 codecs = ['ascii','big5','big5hkscs','cp037','cp273','cp424','cp437','cp500','cp720','cp737','cp775','cp850','cp852','cp855',
@@ -39,7 +39,7 @@ codecs = ['ascii','big5','big5hkscs','cp037','cp273','cp424','cp437','cp500','cp
 
 codecsArray = np.array(codecs) 
 
-def calculVal(method,serie) :
+def calculVal(method, serie) :
     if method == "mean" :
         val = serie.mean()
     elif method == "median" :
@@ -70,16 +70,16 @@ selected
 if selected == "Lecture des données" :
     col1, col2 = st.columns(2)
     with col1 :
-        delimiter = st.text_input("Entrer un délimiter pour un fichier CSV",placeholder="Par exemple ; ou , ou | ")
+        delimiter = st.text_input("Entrer un délimiter pour un fichier CSV", placeholder = "Par exemple ; ou , ou | ")
     with col2 :
-        encode = st.selectbox("Sélectionner un codec :",codecsArray, index=95)
+        encode = st.selectbox("Sélectionner un codec :", codecsArray, index = 95)
     uploaded_file = st.file_uploader("Télécharger le fichier ici")
     if uploaded_file is not None :
         if delimiter == "" :
             # delimiter par défault = ";"
             delimiter = ";"
         
-        data = load_data(uploaded_file, delimiter,encode) 
+        data = load_data(uploaded_file, delimiter, encode) 
         # Set session avec un key dataFrame pour contenir une varaible data
         st.session_state.dataFrame = data
         data   
@@ -106,10 +106,10 @@ if selected =="Traitement des données manquantes" :
         columns = data.columns
         col1, col2 = st.columns(2)
         with col1 :
-             selected_col = st.sidebar.selectbox("Sélectionner une colonne à traiter", columns, key="column")
+             selected_col = st.sidebar.selectbox("Sélectionner une colonne à traiter", columns, key = "column")
              st.markdown("#### :orange[Transformer un type de donnée dans la colonne sélectionnée]")
         with col2 :
-            selected_type = st.selectbox("Sélectionner un type de donnée :",('object','numérique','category','datetime','bool'))
+            selected_type = st.selectbox("Sélectionner un type de donnée :",('object', 'numérique', 'category', 'datetime', 'bool'))
             if st.button("Transformer") and selected_col is not None :
      #           st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
                 if selected_type == "object" or selected_type == "category" or selected_type == "bool" :
@@ -117,7 +117,7 @@ if selected =="Traitement des données manquantes" :
                 elif selected_type == "numérique" :
                     data[selected_col] = pd.to_numeric(data[selected_col])
                 else :
-                    data[selected_col] = pd.to_datetime(data[selected_col], format='%d/%m/%Y')
+                    data[selected_col] = pd.to_datetime(data[selected_col], format = '%d/%m/%Y')
         
         col3, col4 =st.columns(2)
         with col3 :
@@ -134,12 +134,12 @@ if selected =="Traitement des données manquantes" :
             text_disabled = True
             list_selected_text = list(data[selected_col].unique())
             list_selected_text.append("Autre") 
-            selected_text = st.selectbox("Sélectionner une value existant dans la colonne :", list_selected_text, disabled=selected_text_disabled)
+            selected_text = st.selectbox("Sélectionner une value existant dans la colonne :", list_selected_text, disabled = selected_text_disabled)
             print(selected_text)
             if selected_text == "Autre" :
                 text_disabled = False
             text = st.text_input("Entrer un mot :", disabled=text_disabled)
-            method = st.radio("Choisir une façon à remplacer :",("mean","median","mode"), key = "methodNumeric",disabled=radio_disabled)
+            method = st.radio("Choisir une façon à remplacer :",("mean","median","mode"), key = "methodNumeric", disabled = radio_disabled)
             serie = st.session_state.dataFrame[st.session_state.column]
             if is_numeric_dtype(serie) :
                 val = calculVal(method, serie)
@@ -148,17 +148,17 @@ if selected =="Traitement des données manquantes" :
     #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
             #    print("oldDf",st.session_state.oldDataframe.loc[6,"AdherenciaTtoMM1Mto1"])
                 if text != "" :
-                    data[selected_col].fillna(text, inplace=True)
+                    data[selected_col].fillna(text, inplace = True)
                 elif not(selected_text_disabled) and selected_text != "Autre" :
-                    data[selected_col].fillna(selected_text, inplace=True)
+                    data[selected_col].fillna(selected_text, inplace = True)
                 elif method != "mode" :     
-                    data[selected_col].fillna(val, inplace=True)
+                    data[selected_col].fillna(val, inplace = True)
                 else :
                     # Choisir le première valeur de mode trouvée
-                    data[selected_col].fillna(val[0], inplace=True)
+                    data[selected_col].fillna(val[0], inplace = True)
                 st.experimental_rerun()
          
-        col5, col6 =st.columns(2)
+        col5, col6 = st.columns(2)
         with col5 :
             st.markdown("#### :orange[ou supprimer les lignes de données manquantes en critère :]")
 
@@ -170,9 +170,9 @@ if selected =="Traitement des données manquantes" :
             if st.button("Oui, supprimer ces lignes") :
     #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
                 if delete_line == 'any' :
-                    data.dropna(axis=0, how='any', inplace=True)
+                    data.dropna(axis = 0, how = 'any', inplace = True)
                 elif delete_line =='all' :
-                    data.dropna(axis=0, how="all", inplace=True)
+                    data.dropna(axis = 0, how = "all", inplace = True)
                 st.experimental_rerun()
 
         col7, col8 =st.columns(2) 
@@ -186,9 +186,9 @@ if selected =="Traitement des données manquantes" :
             if st.button("Oui, supprimer ces colonnes") :
     #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
                 if delete_column == 'any' :
-                    data.dropna(axis=1, how='any', inplace=True)
+                    data.dropna(axis = 1, how = 'any', inplace = True)
                 elif delete_column =='all' :
-                    data.dropna(axis=1, how="all", inplace=True)
+                    data.dropna(axis=1, how = "all", inplace = True)
                 st.experimental_rerun()
     # Après le traitement , on peut enregistrer les données en fichiers csv
     col9, col10 = st.columns(2)
@@ -196,8 +196,8 @@ if selected =="Traitement des données manquantes" :
         st.markdown("### :orange[Enregistre le fichier :]")
         delimiter = st.selectbox("Sélectionner un délimiteur :", (",",";","|"))
         st.download_button("Enregistre le fichier csv",
-                        data.to_csv(sep=delimiter,encoding="utf_8"),
-                        mime="text/csv") 
+                        data.to_csv(sep = delimiter, encoding = "utf_8"),
+                        mime = "text/csv") 
 
 #Rubrique Statistiques descriptives
 st.session_state.dataFrame = data
@@ -210,20 +210,20 @@ if selected == "Statistiques descriptives" :
 @st.cache_data
 def plotCorr(df) :
     matrix_corr = df[columsNumeric(df)].corr().round(2)
-    fig = plt.figure(figsize=(6,6))
-    sns.heatmap(data=matrix_corr,linewidths=0.3, annot=True)
+    fig = plt.figure(figsize = (6, 6))
+    sns.heatmap(data = matrix_corr, linewidths = 0.3, annot = True)
     st.pyplot(fig)
 
 #Fonction à dessiner des plots de correlations entre variables  
 @st.cache_data 
-def plotPairGraph(df,event) :
-    plt.figure(figsize=(12,12)) 
-    sns.pairplot(df,hue=event)
+def plotPairGraph(df, event) :
+    plt.figure(figsize = (12, 12)) 
+    sns.pairplot(df,hue = event)
     st.pyplot(plt)
 
 #Fonction à dessiner l'histogramme par type de l'ensemble    
 @st.cache_data
-def histogramme(data, col,limit='') :
+def histogramme(data, col, limit = '') :
     plt.figure(figsize=(5,5))
     if limit in data.columns :
         data.hist(column=col,by=limit)       
@@ -280,7 +280,7 @@ if selected == "Représentations graphiques des variables" :
 
 #Fonction à trouver et à afficher la survival function par Kaplan-Meier
 @st.cache_data
-def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,isGrid,col_ent_tard="") :
+def kaplanMeyer(data, col_duration, col_event, montre_ci, crit, isGrid, col_ent_tard="") :
     title_table = "Proportion de survivants et confidence interval à l'instant t"
     title_graph = "Survival function"
     kmf = KaplanMeierFitter()
@@ -295,9 +295,9 @@ def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,isGrid,col_ent_tard="
             table = survival.join(ci)
             table
             #Réprrésenter graphiquement la courbre de survie avec l'interval de confiance
-            ax = plt.subplot(2,2,1)
-            kmf.plot_survival_function(ax=ax,title=title_graph, ci_show=montre_ci)
-            ax.set_ylabel("Probabilités de survie, S(t)",fontsize="x-small")
+            ax = plt.subplot(2, 2, 1)
+            kmf.plot_survival_function(ax = ax, title = title_graph, ci_show = montre_ci)
+            ax.set_ylabel("Probabilités de survie, S(t)", fontsize = "x-small")
             st.pyplot(fig=plt)
         else :
             if isGrid :
@@ -306,7 +306,7 @@ def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,isGrid,col_ent_tard="
                 plotKmf_survival_function(data,col_duration,col_event,montre_ci,crit)
     else :
         if crit == "":
-            kmf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard], label="Modéle d'entrée tardive")
+            kmf.fit(data[col_duration], data[col_event], entry = data[col_ent_tard], label = "Modéle d'entrée tardive")
             #Afficher des tables de suivival function et confidence interval
             st.subheader(title_table)
             survival = kmf.survival_function_
@@ -315,55 +315,29 @@ def kaplanMeyer(data,col_duration,col_event,montre_ci,crit,isGrid,col_ent_tard="
             table
             #Réprrésenter graphiquement la courbre de survie avec l'interval de confiance
             ax =plt.subplot(1,1,1)
-            kmf.plot_survival_function(ax=ax,title=title_graph, ci_show=montre_ci)
+            kmf.plot_survival_function(ax = ax, title = title_graph, ci_show = montre_ci)
 
-            kmf.fit(data[col_duration], data[col_event], label="Ignore les entrées tardives")
-            kmf.plot_survival_function(ax=ax,ci_show=montre_ci)
-            ax.set_ylabel("Probabilités de survie, S(t)",fontsize="small")
-            st.pyplot(fig=plt)
+            kmf.fit(data[col_duration], data[col_event], label = "Ignore les entrées tardives")
+            kmf.plot_survival_function(ax = ax, ci_show = montre_ci)
+            ax.set_ylabel("Probabilités de survie, S(t)", fontsize = "small")
+            st.pyplot(fig = plt)
         else :
-            critArray = data[crit].unique()
-            nbRow = math.ceil(len(critArray)/3)
-            st.header("Survival function avec le modéle d'entrée tardive")
-            fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
-            axes = axes.ravel()
-            i = 0
-            #Initialise BrewslowFlemingHarringtonFitter
-            bfh = BreslowFlemingHarringtonFitter()
-            for val, ax in zip(critArray,axes) :
-                ix = data[crit] == val
-                try :
-                    bfh.fit(data.loc[ix, col_duration], data.loc[ix,col_event],entry=data.loc[ix,col_ent_tard],label="Modéle d'entrée tardive")
-                    bfh.plot_survival_function(ax=ax, ci_show=montre_ci,marker=".", legend =True)
-
-                    bfh.fit(data.loc[ix,col_duration], data.loc[ix,col_event], label="Ignore les entrées tardives")
-                    bfh.plot_survival_function(ax=ax, ci_show=montre_ci, marker="^", legend=True)
-                except :
-                    pass
-                    
-                ax.set_title(val)
-                plt.xlim(0, data[col_duration].max())
-                if i == 0 :
-                    ax.set_ylabel("Probabilités de survie")
-                i+=1
-
-            for i, ax in enumerate(axes) :
-                if i >= len(critArray) :
-                    fig.delaxes(ax)
-            plt.tight_layout()
-            st.pyplot(fig=plt)
-
+            if isGrid :
+                plotKmfGridLateEntry_survival_function(data, col_duration, col_event, montre_ci, crit, col_ent_tard)                
+            else :
+                plotKmfLateEntry_survival_function(data, col_duration, col_event, montre_ci, crit, col_ent_tard)
+            
 def plotKmfGrid_survival_function(data,col_duration,col_event,montre_ci,crit) :
     kmf = KaplanMeierFitter()
     critArray = data[crit].unique()
     nbRow = math.ceil(len(critArray)/3)
-    fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+    fig ,axes = plt.subplots(nrows = nbRow, ncols = 3, figsize = (12, nbRow*4))
     axes = axes.ravel()
     i = 0
     for val, ax in zip(critArray,axes) :
         ix = data[crit] == val
-        kmf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
-        kmf.plot_survival_function(ax=ax, ci_show=montre_ci, legend =False)
+        kmf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label = val)
+        kmf.plot_survival_function(ax = ax, ci_show = montre_ci, legend = False)
         ax.set_title(val)
         plt.xlim(0, data[col_duration].max())
         if i == 0 :
@@ -373,72 +347,128 @@ def plotKmfGrid_survival_function(data,col_duration,col_event,montre_ci,crit) :
         if i >= len(critArray) :
             fig.delaxes(ax)
     plt.tight_layout()
-    st.pyplot(fig=plt)   
+    st.pyplot(fig = plt)   
 
 def plotKmf_survival_function(data,col_duration,col_event,montre_ci,crit) :
     kmf = KaplanMeierFitter()
     critArray = data[crit].unique()
-    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    fig, ax = plt.subplots(1, 1, figsize = (8, 5))
     for val in critArray :
         ix = data[crit] == val
-        kmf.fit(data.loc[ix,col_duration], data.loc[ix,col_event], label=val)
-        kmf.plot_survival_function(ax=ax, ci_show=montre_ci, legend = True)
-    ax.set_title("Fonction de survie", fontsize="x-small")
+        kmf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], label = val)
+        kmf.plot_survival_function(ax = ax, ci_show = montre_ci, legend = True)
+    ax.set_title("Fonction de survie", fontsize = "x-small")
+    ax.set_ylabel("Probabilités de survie", fontsize = "x-small")
+    st.pyplot(fig = plt)
+
+def plotKmfGridLateEntry_survival_function(data, col_duration, col_event, montre_ci, crit, col_ent_tard) :
+    critArray = data[crit].unique()
+    nbRow = math.ceil(len(critArray)/3)
+    st.header("Survival function avec le modéle d'entrée tardive")
+    fig ,axes = plt.subplots(nrows = nbRow, ncols = 3, figsize = (12, nbRow*4))
+    axes = axes.ravel()
+    i = 0
+    #Initialise BrewslowFlemingHarringtonFitter
+    bfh = BreslowFlemingHarringtonFitter()
+    for val, ax in zip(critArray,axes) :
+        ix = data[crit] == val
+        try :
+            bfh.fit(data.loc[ix, col_duration], data.loc[ix, col_event], entry = data.loc[ix, col_ent_tard], label = "Modéle d'entrée tardive")
+            bfh.plot_survival_function(ax = ax, ci_show = montre_ci, marker = ".", legend = True)
+            bfh.fit(data.loc[ix, col_duration], data.loc[ix, col_event], label = "Ignore les entrées tardives")
+            bfh.plot_survival_function(ax = ax, ci_show = montre_ci, marker = "^", legend = True)
+        except :
+            pass            
+        ax.set_title(val)
+        plt.xlim(0, data[col_duration].max())
+        if i == 0 :
+            ax.set_ylabel("Probabilités de survie")
+        i+=1
+
+    for i, ax in enumerate(axes) :
+        if i >= len(critArray) :
+            fig.delaxes(ax)
+    plt.tight_layout()
+    st.pyplot(fig = plt)
+
+def plotKmfLateEntry_survival_function(data, col_duration, col_event, montre_ci, crit, col_ent_tard) :
+    bfh = BreslowFlemingHarringtonFitter()
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1, 1, figsize = (8,5))
+    for val in critArray :
+        ix = data[crit] == val
+        try :
+            bfh.fit(data.loc[ix, col_duration], data.loc[ix, col_event], entry = data.loc[ix, col_ent_tard], label = val)
+            bfh.plot_survival_function(ax = ax, ci_show = montre_ci, legend = True)
+        except :
+            pass
+    ax.set_title("Fonction de surviec en modéle d'entrée tardive", fontsize="x-small")
     ax.set_ylabel("Probabilités de survie", fontsize="x-small")
     st.pyplot(fig=plt)
 
-def nelsonAalen(data,col_duration,col_event,montre_ci,crit,bandwidth,col_ent_tard="") :
+def nelsonAalen(data, col_duration, col_event, montre_ci, crit, bandwidth, isGrid, col_ent_tard = "") :
     naf = NelsonAalenFitter()
     #Si one ne conside pas les entrées tardives
     if col_ent_tard == "" :      
         if crit =="" :
             naf.fit(data[col_duration], data[col_event])
             #Afficher la function risque cumulatif
-            naf.plot_cumulative_hazard(title="La function risque cumulatif", ci_show=montre_ci, figsize=(8,4))
-            st.pyplot(fig=plt)
+            naf.plot_cumulative_hazard(title = "La function risque cumulatif", ci_show = montre_ci, figsize = (8,4))
+            st.pyplot(fig = plt)
             #Afficher la function risque
             plt.close()
-            naf.plot_hazard(bandwidth=bandwidth, title="La function risque", ci_show=montre_ci,figsize=(8,4))
-            st.pyplot(fig=plt)
+            naf.plot_hazard(bandwidth = bandwidth, title = "La function risque", ci_show = montre_ci, figsize = (8,4))
+            st.pyplot(fig = plt)
         else :
-            critArray = data[crit].unique()
-            plotNelson_cumulative_hazard(data,col_duration, col_event, critArray, crit, montre_ci)
-            st.divider()
-            plotNelson_hazard(data,col_duration, col_event, critArray, crit, montre_ci, bandwidth)
+            if isGrid :
+                critArray = data[crit].unique()
+                plotNelsonGrid_cumulative_hazard(data,col_duration, col_event, critArray, crit, montre_ci)
+                st.divider()
+                plotNelsonGrid_hazard(data,col_duration, col_event, critArray, crit, montre_ci, bandwidth)
+            else :
+                plotNelson_cumulative_hazard(data, col_duration, col_event, crit, montre_ci)
+                st.divider()
+                plotNelson_hazard(data, col_duration, col_event, crit, montre_ci, bandwidth)
+           
     else : 
         if crit =="" :
-            naf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard], label="Modéle d'entrée tardive")
+            naf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard], label = "Modéle d'entrée tardive")
             #Afficher la function risque cumulatif
             ax = plt.subplot(1,1,1)
-            naf.plot_cumulative_hazard(ax=ax,title="La function risque cumulatif", ci_show=montre_ci,figsize=(8,4))
-            naf.fit(data[col_duration], data[col_event], label="Ignore les entrées tardives")
-            naf.plot_cumulative_hazard(ax=ax,ci_show=montre_ci)
-            st.pyplot(fig=plt)
+            naf.plot_cumulative_hazard(ax = ax,title = "La function risque cumulatif", ci_show = montre_ci,figsize = (8,4))
+            naf.fit(data[col_duration], data[col_event], label = "Ignore les entrées tardives")
+            naf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci)
+            st.pyplot(fig = plt)
             #Afficher la function risque
             plt.close()
-            ax=plt.subplot(1,1,1)
+            ax = plt.subplot(1,1,1)
             naf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard], label="Modéle d'entrée tardive")
-            naf.plot_hazard(ax=ax,bandwidth=bandwidth, title="La function risque", ci_show=montre_ci,figsize=(8,4))
-            naf.fit(data[col_duration], data[col_event], label="Ignore les entrées tardives")
-            naf.plot_hazard(ax=ax,bandwidth=bandwidth, ci_show=montre_ci)
+            naf.plot_hazard(ax = ax, bandwidth = bandwidth, title = "La function risque", ci_show = montre_ci,figsize = (8,4))
+            naf.fit(data[col_duration], data[col_event], label = "Ignore les entrées tardives")
+            naf.plot_hazard(ax = ax,bandwidth = bandwidth, ci_show = montre_ci)
             st.pyplot(fig=plt)
         else :
-            critArray = data[crit].unique()
-            plotNelsonLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci)
-            st.divider()
-            plotNelsonLateEntry_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci, bandwidth)
+            if isGrid :
+                critArray = data[crit].unique()
+                plotNelsonGridLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci)
+                st.divider()
+                plotNelsonGridLateEntry_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci, bandwidth)
+            else :
+                plotNelsonLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, crit, montre_ci)
+                st.divider()
+                plotNelsonLateEntry_hazard(data, col_duration, col_event, col_ent_tard, crit,montre_ci, bandwidth)
 
 
-def plotNelson_cumulative_hazard(data,col_duration,col_event,critArray,crit,montre_ci) :
+def plotNelsonGrid_cumulative_hazard(data, col_duration, col_event, critArray, crit, montre_ci) :
     naf = NelsonAalenFitter()
     nbRow = math.ceil(len(critArray)/3)
-    fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+    fig ,axes = plt.subplots(nrows = nbRow, ncols = 3, figsize = (12,nbRow*4))
     axes = axes.ravel()
     i = 0
     for val, ax in zip(critArray,axes) :
         ix = data[crit] == val
-        naf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
-        naf.plot_cumulative_hazard(ax=ax, ci_show=montre_ci, legend =False)
+        naf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label = val)
+        naf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci, legend = False)
         ax.set_title(val)
         plt.xlim(0, data[col_duration].max())
         if i == 0 :
@@ -448,18 +478,18 @@ def plotNelson_cumulative_hazard(data,col_duration,col_event,critArray,crit,mont
         if i >= len(critArray) :
             fig.delaxes(ax)
     plt.tight_layout()
-    st.pyplot(fig=plt)
+    st.pyplot(fig = plt)
 
-def plotNelson_hazard(data,col_duration,col_event,critArray,crit,montre_ci,bandwidth) :
+def plotNelsonGrid_hazard(data, col_duration, col_event, critArray, crit, montre_ci, bandwidth) :
     naf = NelsonAalenFitter()
     nbRow = math.ceil(len(critArray)/3)
-    fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+    fig ,axes = plt.subplots(nrows = nbRow, ncols = 3, figsize = (12,nbRow*4))
     axes = axes.ravel()
     i = 0
     for val, ax in zip(critArray,axes) :
         ix = data[crit] == val
         naf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
-        naf.plot_hazard(ax=ax, bandwidth=bandwidth, ci_show=montre_ci, legend =False)
+        naf.plot_hazard(ax=ax, bandwidth = bandwidth, ci_show = montre_ci, legend = False)
         ax.set_title(val)
         plt.xlim(0, data[col_duration].max())
         if i == 0 :
@@ -471,7 +501,31 @@ def plotNelson_hazard(data,col_duration,col_event,critArray,crit,montre_ci,bandw
     plt.tight_layout()
     st.pyplot(fig=plt)
 
-def plotNelsonLateEntry_cumulative_hazard(data,col_duration,col_event,col_ent_tard,critArray,crit,montre_ci) :
+def plotNelson_cumulative_hazard(data, col_duration, col_event, crit, montre_ci) :
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    naf = NelsonAalenFitter()
+    for val in critArray :
+        ix = data[crit] == val
+        naf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], label = val)
+        naf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci, legend = True)
+    ax.set_title("Nelson-Aalen", fontsize = "small")
+    ax.set_ylabel("La function risque cumulatif", fontsize = "small")
+    st.pyplot(fig=plt)
+
+def plotNelson_hazard(data, col_duration, col_event, crit, montre_ci, bandwidth) :
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    naf = NelsonAalenFitter()
+    for val in critArray :
+        ix = data[crit] == val
+        naf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], label=val)
+        naf.plot_hazard(ax = ax, bandwidth = bandwidth, ci_show = montre_ci, legend = True)
+    ax.set_title("Nelson-Aalen", fontsize = "small")
+    ax.set_ylabel("La function risque", fontsize = "small")
+    st.pyplot(fig=plt)
+
+def plotNelsonGridLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci) :
     naf = NelsonAalenFitter()
     nbRow = math.ceil(len(critArray)/3)
     fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
@@ -495,7 +549,7 @@ def plotNelsonLateEntry_cumulative_hazard(data,col_duration,col_event,col_ent_ta
     plt.tight_layout()
     st.pyplot(fig=plt)
 
-def plotNelsonLateEntry_hazard(data,col_duration,col_event,col_ent_tard,critArray,crit,montre_ci,bandwidth) :
+def plotNelsonGridLateEntry_hazard(data,col_duration,col_event,col_ent_tard,critArray,crit,montre_ci,bandwidth) :
     naf = NelsonAalenFitter()
     nbRow = math.ceil(len(critArray)/3)
     fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
@@ -519,6 +573,36 @@ def plotNelsonLateEntry_hazard(data,col_duration,col_event,col_ent_tard,critArra
     plt.tight_layout()
     st.pyplot(fig=plt)
 
+def plotNelsonLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, crit, montre_ci) :
+    naf = NelsonAalenFitter()
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    for val in critArray :
+        ix = data[crit] == val
+        try :
+            naf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], entry = data.loc[ix, col_ent_tard], label = val)
+            naf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci, legend = True)
+        except :
+            pass
+    ax.set_title("Nelson-Aalen", fontsize = "small")
+    ax.set_ylabel("La function risque cumulatif", fontsize = "small")
+    st.pyplot(fig=plt)
+
+def plotNelsonLateEntry_hazard(data, col_duration, col_event, col_ent_tard, crit,montre_ci, bandwidth) :
+    naf = NelsonAalenFitter()
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    for val in critArray :
+        ix = data[crit] == val
+        try :
+            naf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], entry = data.loc[ix, col_ent_tard], label = val)
+            naf.plot_hazard(ax = ax, bandwidth = bandwidth, ci_show = montre_ci, legend = True)
+        except :
+            pass
+    ax.set_title("Nelson-Aalen", fontsize = "small")
+    ax.set_ylabel("La function risque", fontsize = "small")
+    st.pyplot(fig=plt)
+
 def weibullPrintSummary(wbf) :
     #Redirect où stdout va, écrire à mystdout
     old_stdout = sys.stdout
@@ -527,7 +611,7 @@ def weibullPrintSummary(wbf) :
     sys.stdout = old_stdout
     st.text(mystdout.getvalue())
 
-def weibull(data,col_duration,col_event,montre_ci,crit,col_ent_tard="") :
+def weibull(data, col_duration, col_event, montre_ci, crit, isGrid, col_ent_tard="") :
     wbf = WeibullFitter()
     #Si one ne conside pas les entrées tardives
     if col_ent_tard == "" :      
@@ -536,51 +620,61 @@ def weibull(data,col_duration,col_event,montre_ci,crit,col_ent_tard="") :
             #Afficher summary de paramètres du modèle Weibull
             weibullPrintSummary(wbf)
             #Afficher la function risque cumulatif
-            wbf.plot_cumulative_hazard(title="La function risque cumulatif", ci_show=montre_ci, figsize=(8,4))
+            wbf.plot_cumulative_hazard(title = "La function risque cumulatif", ci_show = montre_ci, figsize = (8,4))
             st.pyplot(fig=plt)
             #Afficher la function risque
             plt.close()
-            wbf.plot_hazard(title="La function risque", ci_show=montre_ci,figsize=(8,4))
-            st.pyplot(fig=plt)
+            wbf.plot_hazard(title = "La function risque", ci_show = montre_ci, figsize = (8,4))
+            st.pyplot(fig = plt)
         else :
-            critArray = data[crit].unique()
-            plotWeibull_cumulative_hazard(data, col_duration, col_event, critArray, crit, montre_ci)
-            st.divider()
-            plotWeibull_hazard(data, col_duration, col_event, critArray, crit, montre_ci)
+            if isGrid :
+                critArray = data[crit].unique()
+                plotWeibullGrid_cumulative_hazard(data, col_duration, col_event, critArray, crit, montre_ci)
+                st.divider()
+                plotWeibullGrid_hazard(data, col_duration, col_event, critArray, crit, montre_ci)
+            else :
+                plotWeibull_cumulative_hazard(data, col_duration, col_event, crit, montre_ci) 
+                st.divider()
+                plotWeibull_hazard(data, col_duration, col_event, crit, montre_ci)
     else :
         if crit =="" :
-            wbf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard], label="Modéle d'entrée tardive")
+            wbf.fit(data[col_duration], data[col_event], entry = data[col_ent_tard], label = "Modéle d'entrée tardive")
             #Afficher summary de paramètres du modèle Weibull
             weibullPrintSummary(wbf)
             ax = plt.subplot(1,1,1)
-            wbf.plot_cumulative_hazard(ax=ax,title="La function risque cumulatif", ci_show=montre_ci,figsize=(8,4))
-            wbf.fit(data[col_duration], data[col_event], label="Ignore les entrées tardives")
-            wbf.plot_cumulative_hazard(ax=ax,ci_show=montre_ci)
-            st.pyplot(fig=plt)
+            wbf.plot_cumulative_hazard(ax = ax, title = "La function risque cumulatif", ci_show = montre_ci, figsize = (8,4))
+            wbf.fit(data[col_duration], data[col_event], label = "Ignore les entrées tardives")
+            wbf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci)
+            st.pyplot(fig = plt)
             #Afficher la function risque
             plt.close()
-            ax=plt.subplot(1,1,1)
-            wbf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard], label="Modéle d'entrée tardive")
-            wbf.plot_hazard(ax=ax, title="La function risque", ci_show=montre_ci,figsize=(8,4))
-            wbf.fit(data[col_duration], data[col_event], label="Ignore les entrées tardives")
-            wbf.plot_hazard(ax=ax, ci_show=montre_ci)
-            st.pyplot(fig=plt)
+            ax=plt.subplot(1, 1, 1)
+            wbf.fit(data[col_duration], data[col_event], entry = data[col_ent_tard], label = "Modéle d'entrée tardive")
+            wbf.plot_hazard(ax = ax, title = "La function risque", ci_show = montre_ci, figsize = (8,4))
+            wbf.fit(data[col_duration], data[col_event], label = "Ignore les entrées tardives")
+            wbf.plot_hazard(ax = ax, ci_show = montre_ci)
+            st.pyplot(fig = plt)
         else :
-            critArray = data[crit].unique()
-            plotWeibullLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci)
-            st.divider()
-            plotWeibullLateEntry_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci)
+            if isGrid :
+                critArray = data[crit].unique()
+                plotWeibullGridLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci)
+                st.divider()
+                plotWeibullGridLateEntry_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci)
+            else :
+                plotWeibullLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, crit, montre_ci) 
+                st.divider()
+                plotWeibullLateEntry_hazard(data, col_duration, col_event, col_ent_tard, crit,montre_ci)
 
-def plotWeibull_cumulative_hazard(data,col_duration,col_event,critArray,crit,montre_ci) :
+def plotWeibullGrid_cumulative_hazard(data, col_duration, col_event, critArray, crit, montre_ci) :
     wbf = WeibullFitter()
-    nbRow = math.ceil(len(critArray)/3)
-    fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+    nbRow = math.ceil(len(critArray) / 3)
+    fig ,axes = plt.subplots(nrows = nbRow, ncols = 3, figsize = (12, nbRow*4))
     axes = axes.ravel()
     i = 0
-    for val, ax in zip(critArray,axes) :
+    for val, ax in zip(critArray, axes) :
         ix = data[crit] == val
-        wbf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
-        wbf.plot_cumulative_hazard(ax=ax, ci_show=montre_ci, legend =False)
+        wbf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label = val)
+        wbf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci, legend = False)
         ax.set_title(val)
         plt.xlim(0, data[col_duration].max())
         if i == 0 :
@@ -590,18 +684,18 @@ def plotWeibull_cumulative_hazard(data,col_duration,col_event,critArray,crit,mon
         if i >= len(critArray) :
             fig.delaxes(ax)
     plt.tight_layout()
-    st.pyplot(fig=plt)
+    st.pyplot(fig = plt)
 
-def plotWeibull_hazard(data,col_duration,col_event,critArray,crit,montre_ci) :
+def plotWeibullGrid_hazard(data, col_duration, col_event, critArray, crit, montre_ci) :
     wbf = WeibullFitter()
-    nbRow = math.ceil(len(critArray)/3)
-    fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+    nbRow = math.ceil(len(critArray) / 3)
+    fig ,axes = plt.subplots(nrows = nbRow, ncols = 3, figsize = (12, nbRow*4))
     axes = axes.ravel()
     i = 0
-    for val, ax in zip(critArray,axes) :
+    for val, ax in zip(critArray, axes) :
         ix = data[crit] == val
-        wbf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label=val)
-        wbf.plot_hazard(ax=ax, ci_show=montre_ci, legend =False)
+        wbf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], label = val)
+        wbf.plot_hazard(ax = ax, ci_show = montre_ci, legend = False)
         ax.set_title(val)
         plt.xlim(0, data[col_duration].max())
         if i == 0 :
@@ -611,19 +705,43 @@ def plotWeibull_hazard(data,col_duration,col_event,critArray,crit,montre_ci) :
         if i >= len(critArray) :
             fig.delaxes(ax)
     plt.tight_layout()
-    st.pyplot(fig=plt)
+    st.pyplot(fig = plt)
 
-def plotWeibullLateEntry_cumulative_hazard(data,col_duration,col_event,col_ent_tard,critArray,crit,montre_ci) :
+def plotWeibull_cumulative_hazard(data, col_duration, col_event, crit, montre_ci) :
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1, 1, figsize = (8, 5))
+    wbf = WeibullFitter()
+    for val in critArray :
+        ix = data[crit] == val
+        wbf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], label = val)
+        wbf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci, legend = True)
+    ax.set_title("Weibull", fontsize = "small")
+    ax.set_ylabel("La function risque cumulatif", fontsize = "small")
+    st.pyplot(fig = plt)
+
+def plotWeibull_hazard(data, col_duration, col_event, crit, montre_ci) :
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1, 1, figsize = (8, 5))
+    wbf = WeibullFitter()
+    for val in critArray :
+        ix = data[crit] == val
+        wbf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], label = val)
+        wbf.plot_hazard(ax = ax, ci_show = montre_ci, legend = True)
+    ax.set_title("Weibull", fontsize = "small")
+    ax.set_ylabel("La function risque", fontsize = "small")
+    st.pyplot(fig = plt)
+
+def plotWeibullGridLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci) :
     wbf = WeibullFitter()
     nbRow = math.ceil(len(critArray)/3)
-    fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
+    fig ,axes = plt.subplots(nrows = nbRow, ncols = 3, figsize = (12, nbRow*4))
     axes = axes.ravel()
     i = 0
     for val, ax in zip(critArray,axes) :
         ix = data[crit] == val
         try :
-            wbf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], entry=data.loc[ix,col_ent_tard], label="Modèle d'entrée tardive")
-            wbf.plot_cumulative_hazard(ax=ax, ci_show=montre_ci, legend =True)
+            wbf.fit(data.loc[ix, col_duration], data.loc[ix,col_event], entry = data.loc[ix,col_ent_tard], label = "Modèle d'entrée tardive")
+            wbf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci, legend = True)
         except Exception as e:
             print(e)
         ax.set_title(val)
@@ -635,9 +753,9 @@ def plotWeibullLateEntry_cumulative_hazard(data,col_duration,col_event,col_ent_t
         if i >= len(critArray) :
             fig.delaxes(ax)
     plt.tight_layout()
-    st.pyplot(fig=plt)
+    st.pyplot(fig = plt)
 
-def plotWeibullLateEntry_hazard(data,col_duration,col_event,col_ent_tard,critArray,crit,montre_ci) :
+def plotWeibullGridLateEntry_hazard(data, col_duration, col_event, col_ent_tard, critArray, crit, montre_ci) :
     wbf = WeibullFitter()
     nbRow = math.ceil(len(critArray)/3)
     fig ,axes = plt.subplots(nrows=nbRow,ncols=3,figsize=(12,nbRow*4))
@@ -659,7 +777,37 @@ def plotWeibullLateEntry_hazard(data,col_duration,col_event,col_ent_tard,critArr
         if i >= len(critArray) :
             fig.delaxes(ax)
     plt.tight_layout()
-    st.pyplot(fig=plt)
+    st.pyplot(fig = plt)
+
+def plotWeibullLateEntry_cumulative_hazard(data, col_duration, col_event, col_ent_tard, crit, montre_ci) :
+    wbf = WeibullFitter()
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    for val in critArray :
+        ix = data[crit] == val
+        try :
+            wbf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], entry = data.loc[ix, col_ent_tard], label = val)
+            wbf.plot_cumulative_hazard(ax = ax, ci_show = montre_ci, legend = True)
+        except :
+            pass
+    ax.set_title("Weibull", fontsize = "small")
+    ax.set_ylabel("La function risque cumulatif", fontsize = "small")
+    st.pyplot(fig = plt)
+
+def plotWeibullLateEntry_hazard(data, col_duration, col_event, col_ent_tard, crit,montre_ci) :
+    wbf = WeibullFitter()
+    critArray = data[crit].unique()
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    for val in critArray :
+        ix = data[crit] == val
+        try :
+            wbf.fit(data.loc[ix, col_duration], data.loc[ix, col_event], entry = data.loc[ix, col_ent_tard], label = val)
+            wbf.plot_hazard(ax = ax, ci_show = montre_ci, legend = True)
+        except :
+            pass
+    ax.set_title("Weibull", fontsize = "small")
+    ax.set_ylabel("La function risque", fontsize = "small")
+    st.pyplot(fig = plt)
 
 #Rubrique Probabilités de survie et courbres de survie
 if selected == "Probabilités de survie et courbes de survie" :
@@ -687,21 +835,21 @@ if selected == "Probabilités de survie et courbes de survie" :
         st.warning("Veuillez sélectionner bien des colonnes de la durée et de l'événement et un critère si besoin",icon="⚠️" )
         if st.button("Afficher la fonction de survie") :
             if ent_tard :
-                kaplanMeyer(data, col_duration, col_event, montre_ci, crit,isGrid,col_ent_tard)
+                kaplanMeyer(data, col_duration, col_event, montre_ci, crit, isGrid, col_ent_tard)
             else :
                 kaplanMeyer(data, col_duration, col_event, montre_ci, crit,isGrid)
         
         st.subheader("La function risque ou Hazard rates")
         if st.button("Afficher par le modéle Nelson-Aalen") :
             if ent_tard :
-                nelsonAalen(data, col_duration, col_event, montre_ci, crit, bandwidth,col_ent_tard)
+                nelsonAalen(data, col_duration, col_event, montre_ci, crit, bandwidth, isGrid, col_ent_tard)
             else :
-                nelsonAalen(data, col_duration, col_event, montre_ci, crit,bandwidth)
+                nelsonAalen(data, col_duration, col_event, montre_ci, crit, bandwidth, isGrid)
         if st.button("Afficher par le modèle Weibull") :
             if ent_tard :
-                weibull(data, col_duration, col_event, montre_ci, crit,col_ent_tard)
+                weibull(data, col_duration, col_event, montre_ci, crit, isGrid, col_ent_tard)
             else :
-                weibull(data, col_duration, col_event, montre_ci, crit)
+                weibull(data, col_duration, col_event, montre_ci, crit, isGrid)
 
 def kaplanMeierPredict(data, col_duration, col_event,crit,time_predict,col_ent_tard="") :
     kmf = KaplanMeierFitter()
