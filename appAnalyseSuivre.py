@@ -964,7 +964,7 @@ def coxPHFitterCustom(data, cols, col_duration, col_event, col_ent_tard) :
         cph.fit(newData, duration_col = col_duration, event_col = col_event, entry_col = col_ent_tard)
     
     return cph, newData
-    
+
 
 # Rubrique Modèle de régression de Cox
 if selected == "Modèle de régression de Cox" :
@@ -993,7 +993,7 @@ if selected == "Modèle de régression de Cox" :
                 st.error("Veuillez sélectionner bien des colonnes à traiter", icon="🚨")
 
         st.subheader(":orange[Tracer l'effet de la variation d'une covariable]")
-        if cols is not None :
+        if len(cols) != 0 :
             newData = data.loc[:, cols]
             newData = pd.get_dummies(newData, drop_first = True, dtype = int)
             covariable = st.sidebar.selectbox("Sélectionner une colonne covariable", newData.columns) 
