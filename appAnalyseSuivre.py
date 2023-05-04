@@ -12,6 +12,8 @@ import math
 from lifelines import BreslowFlemingHarringtonFitter
 from lifelines import NelsonAalenFitter
 from lifelines import WeibullFitter
+from lifelines import CoxPHFitter
+from lifelines.statistics import multivariate_logrank_test
 from io import StringIO
 import sys
 import pickle
@@ -48,6 +50,13 @@ def calculVal(method, serie) :
         val = serie.mode()
     return val
 
+def makeTextMode(serie) :
+    text=""
+    for val in serie :
+        text += str(val)+" "
+    text = text.strip()
+    return text
+
 # Sidebar paramétrage
 with st.sidebar :
     st.header("Paramétrage ")
@@ -82,7 +91,7 @@ if selected == "Lecture des données" :
         data = load_data(uploaded_file, delimiter, encode) 
         # Set session avec un key dataFrame pour contenir une varaible data
         st.session_state.dataFrame = data
-        data   
+        st.dataframe(data.head()) 
 
 # sauvegarder le dataframe d'origine pour undo le traitement
 st.session_state.oldDataframe = pickle.loads(pickle.dumps(st.session_state.dataFrame))  
@@ -132,9 +141,14 @@ if selected =="Traitement des données manquantes" :
                 selected_text_disabled = False
                
             text_disabled = True
-            list_selected_text = list(data[selected_col].unique())
-            list_selected_text.append("Autre") 
-            selected_text = st.selectbox("Sélectionner une value existant dans la colonne :", list_selected_text, disabled = selected_text_disabled)
+            texts = data[selected_col].dropna().unique()
+            list_selected_text = list(texts)
+            list_selected_text.append("Autre")
+            if not(selected_text_disabled) :
+                modeSerie = data[selected_col].dropna().mode()
+                textMode = makeTextMode(modeSerie)
+                st.markdown(f'Le mode = :orange[{textMode}]') 
+            selected_text = st.selectbox("Sélectionner une value existante dans la colonne :", list_selected_text, disabled = selected_text_disabled)
             print(selected_text)
             if selected_text == "Autre" :
                 text_disabled = False
@@ -143,7 +157,11 @@ if selected =="Traitement des données manquantes" :
             serie = st.session_state.dataFrame[st.session_state.column]
             if is_numeric_dtype(serie) :
                 val = calculVal(method, serie)
-                st.markdown(f"Valeur = {val}")
+                if isinstance(val, pd.Series) :
+                    textMode = makeTextMode(val)
+                    st.markdown(f'Valeur = {textMode}')
+                else :
+                    st.markdown(f"Valeur = {val}")
             if st.button("Remplacer") :
     #            st.session_state.oldDataframe = pickle.loads(pickle.dumps(data))
             #    print("oldDf",st.session_state.oldDataframe.loc[6,"AdherenciaTtoMM1Mto1"])
@@ -609,7 +627,8 @@ def weibullPrintSummary(wbf) :
     sys.stdout = mystdout = StringIO()
     wbf.print_summary()
     sys.stdout = old_stdout
-    st.text(mystdout.getvalue())
+    with st.expander("Récapitulatif") :
+        st.text(mystdout.getvalue())
 
 def weibull(data, col_duration, col_event, montre_ci, crit, isGrid, col_ent_tard="") :
     wbf = WeibullFitter()
@@ -851,20 +870,60 @@ if selected == "Probabilités de survie et courbes de survie" :
             else :
                 weibull(data, col_duration, col_event, montre_ci, crit, isGrid)
 
-def kaplanMeierPredict(data, col_duration, col_event,crit,time_predict,col_ent_tard="") :
-    kmf = KaplanMeierFitter()
-    if col_ent_tard == "" :
-        if crit == "":
-            kmf.fit(data[col_duration], data[col_event])
-            st.write("%.2f" % kmf.predict(time_predict, interpolate=True))
-        else :
-            pass
-            #kmf.fit(data.loc[])
-    else :
-        if crit == "" :
-            kmf.fit(data[col_duration], data[col_event], entry=data[col_ent_tard])
-            st.write("%.2f" % kmf.predict(time_predict, interpolate=True))
+style_predict_box = 'style = "border : 2px solid orange; max-width : 10%;  text-align: center; margin-bottom: 15px"'
 
+def kaplanMeierPredict(data, col_duration, col_event, crit, time_predict, col_ent_tard="") :
+    kmf = KaplanMeierFitter()
+    #BFH pour calculer une fonction de survie avec l'entrée tard car lifelines.exceptions.StatError:
+    # There are too few early truncation times and too many events. S(t)==0 for all t>10. Recommend BreslowFlemingHarringtonFitter.
+    bfh = BreslowFlemingHarringtonFitter()
+    if crit == "":
+        newData = data
+        if col_ent_tard == "" :
+            kmf.fit(newData[col_duration], newData[col_event])
+        else :
+            try :
+                bfh.fit(newData[col_duration], newData[col_event], entry = newData[col_ent_tard])
+            except :
+                pass
+    else :
+        ix = data[crit] == st.session_state.filter_value
+        newData = data.loc[ix, :]
+        if col_ent_tard == "" :
+            kmf.fit(newData[col_duration], newData[col_event])
+        else :
+            try :
+                bfh.fit(newData[col_duration], newData[col_event], entry = newData[col_ent_tard])
+            except :
+                pass
+
+    st.write("Le nombre de lignes de données impliquées = ", newData[col_duration].count())
+    if col_ent_tard == "" :
+        predict = "{:.2f}".format(kmf.predict(time_predict, interpolate = True))
+    else :
+        predict = "{:.2f}".format(bfh.predict(time_predict, interpolate = True))
+      
+    st.markdown(f'<div {style_predict_box}>{predict}</div>', unsafe_allow_html=True)   
+
+def weibullPredict(data, col_duration, col_event, crit, time_predict, col_ent_tard="") :
+    wbf = WeibullFitter()
+    if crit == "":
+        newData = data
+        if col_ent_tard == "" :
+            wbf.fit(newData[col_duration], newData[col_event])   
+        else :
+            wbf.fit(newData[col_duration], newData[col_event], entry = newData[col_ent_tard])
+    else :
+        ix = data[crit] == st.session_state.filter_value
+        newData = data.loc[ix, :]
+        if col_ent_tard == "" :    
+            wbf.fit(newData[col_duration], newData[col_event])
+        else :
+            wbf.fit(newData[col_duration], newData[col_event], entry = newData[col_ent_tard])
+    st.write("Le nombre de lignes de données impliquées = ", newData[col_duration].count())
+    predict = "{:.2f}".format(wbf.predict(time_predict, interpolate = True))
+    st.markdown(f'<div {style_predict_box}>{predict}</div>', unsafe_allow_html=True)   
+            
 #Rubrique Prédiction de survie d'un individu
 if selected == "Prédiction de survie d'un individu" :
     data = st.session_state.dataFrame
@@ -879,18 +938,88 @@ if selected == "Prédiction de survie d'un individu" :
         colNoNum = columnsNoNum(data.iloc[:,1:], colNum)
         if chkCrit :
             crit =  st.sidebar.selectbox("Sélectionner un critère de données :", colNoNum)
+            filterValue = st.sidebar.selectbox("Choisir une value pour le filtrage", sorted(list(data[crit].unique())), key = "filter_value")
         ent_tard = st.sidebar.checkbox("Consider les entrées tardive")
+        col_ent_tard = ""
         if ent_tard :
             col_ent_tard = st.sidebar.selectbox("Sélectionner une colonne pour les entrées tardives", data.columns)
         maxTime = data[col_duration].max()
         #print(maxTime)
         #print(2*maxTime)
-        st.warning("Veuillez sélectionner bien des colonnes de la durée et de l'événement et un critère si besoin",icon="⚠️" )
-        time_predict = st.number_input(label="**:orange[Veuillez saisir un nombre de temps où vous voulez pour la prediction]**"
-                    ,min_value=1, max_value = 2*maxTime, value = 1, step= 1)
-        if st.button("Afficher une prediction de la fonction de survie") :
-            if ent_tard :
-                kaplanMeierPredict(data, col_duration, col_event, crit, time_predict,col_ent_tard)
+        st.warning("Veuillez sélectionner bien des colonnes de la durée et de l'événement et un critère si besoin", icon = "⚠️" )
+        time_predict = st.number_input(label = "**:orange[Veuillez saisir un nombre de temps où vous voulez pour la prediction]**"
+                    , min_value = 1, max_value = 2*maxTime, value = 1, step= 1)
+        if st.button("Afficher une prediction de la fonction de survie: Kaplan-Meier") :
+            kaplanMeierPredict(data, col_duration, col_event, crit, time_predict, col_ent_tard)
+        if st.button("Afficher une prediction de la fonction de survie: modèle de Weibull ") :
+            weibullPredict(data, col_duration, col_event, crit, time_predict, col_ent_tard) 
+
+def coxPHFitterCustom(data, cols, col_duration, col_event, col_ent_tard) :
+    cph = CoxPHFitter(penalizer=0.1)
+    newData = data.loc[:, cols]
+    newData = pd.get_dummies(newData, drop_first = True, dtype = int)
+    if col_ent_tard == "" :
+        cph.fit(newData, duration_col = col_duration, event_col = col_event)
+    else :
+        cph.fit(newData, duration_col = col_duration, event_col = col_event, entry_col = col_ent_tard)
+    
+    return cph, newData
+    
+
+# Rubrique Modèle de régression de Cox
+if selected == "Modèle de régression de Cox" :
+    data = st.session_state.dataFrame
+    if len(data.columns) != 0 :
+        cols = st.sidebar.multiselect("Sélectionner des colonnes à traiter dans le modèle  de régression de COX", data.columns)
+        col_duration = st.sidebar.selectbox("Sélectionner une colonne pour une durée ", data.columns)
+        col_event = st.sidebar.selectbox("Sélectionner une colonne pour un événement", data.columns)
+        ent_tard = st.sidebar.checkbox("Consider les entrées tardive")
+        col_ent_tard = ""
+        if ent_tard :
+            col_ent_tard = st.sidebar.selectbox("Sélectionner une colonne pour les entrées tardives", data.columns)
+        
+        st.warning("Veuillez sélectionner bien des colonnes à traiter",icon="⚠️" )
+        if st.button("Afficher un récapitulatif") :
+            try :
+                cph, newData = coxPHFitterCustom(data, cols, col_duration, col_event, col_ent_tard)
+                with st.expander("Dataframe tranformé par One-Hot Encoding") :
+                    newData
+                with st.expander("Description statistique") :
+                    st.dataframe(newData.describe())
+                cph.summary   
+                cph.plot()
+                st.pyplot(fig = plt)
+            except :
+                st.error("Veuillez sélectionner bien des colonnes à traiter", icon="🚨")
+
+        st.subheader(":orange[Tracer l'effet de la variation d'une covariable]")
+        if cols is not None :
+            newData = data.loc[:, cols]
+            newData = pd.get_dummies(newData, drop_first = True, dtype = int)
+            covariable = st.sidebar.selectbox("Sélectionner une colonne covariable", newData.columns) 
+            #Si une colonne est en type numérique, on cherche min at max dans cette colonne et prend 5 values entre min et max (inclusif)
+            #de même écart entre eux
+            minVal = newData[covariable].min()
+            maxVal = newData[covariable].max()
+            if minVal != 0 and maxVal != 1 :
+                sample = np.linspace(start = minVal, stop = maxVal, num = 5) 
             else :
-                kaplanMeierPredict(data, col_duration, col_event, crit, time_predict)
+            #Si c'est une colonne de category ou string, on prend 0 et 1 comme une variable binaire
+                sample = [0,1]
+
+        st.warning("Veuillez sélectionner bien une colonne covariable",icon="⚠️" )
+        if st.button("Afficher la fonction de survie") :
+            try :
+                cph, newData = coxPHFitterCustom(data, cols, col_duration, col_event, col_ent_tard)
+            #    print(covariable)
+            #    print(sample)
+                cph.plot_partial_effects_on_outcome(covariates = covariable, values = sample, cmap='coolwarm', figsize=(8, 5))
+                st.pyplot(fig = plt)
+                #Hypothèse de test selon laquelle il n’y a pas de différence de survie entre groupes 
+                #tout en contrôlant une autre variable
+                results = multivariate_logrank_test(newData[col_duration], newData[covariable], newData[col_event])
+                results.summary
+            except :
+                st.error("Veuillez sélectionner bien des colonnes à traiter et une colonne covariable", icon="🚨")
+
             
