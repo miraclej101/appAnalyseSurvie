@@ -844,7 +844,7 @@ if selected == "Probabilités de survie et courbes de survie" :
         crit =""
         if chkCrit :
             crit =  st.sidebar.selectbox("Sélectionner un critère de données :", colNoNum)
-        ent_tard = st.sidebar.checkbox("Consider les entrées tardive")
+        ent_tard = st.sidebar.checkbox("Considérer les entrées tardive")
 
         if ent_tard :
             col_ent_tard = st.sidebar.selectbox("Sélectionner une colonne pour les entrées tardives", data.columns)
@@ -939,7 +939,7 @@ if selected == "Prédiction de survie d'un individu" :
         if chkCrit :
             crit =  st.sidebar.selectbox("Sélectionner un critère de données :", colNoNum)
             filterValue = st.sidebar.selectbox("Choisir une value pour le filtrage", sorted(list(data[crit].unique())), key = "filter_value")
-        ent_tard = st.sidebar.checkbox("Consider les entrées tardive")
+        ent_tard = st.sidebar.checkbox("Considérer les entrées tardive")
         col_ent_tard = ""
         if ent_tard :
             col_ent_tard = st.sidebar.selectbox("Sélectionner une colonne pour les entrées tardives", data.columns)
@@ -970,10 +970,10 @@ def coxPHFitterCustom(data, cols, col_duration, col_event, col_ent_tard) :
 if selected == "Modèle de régression de Cox" :
     data = st.session_state.dataFrame
     if len(data.columns) != 0 :
-        cols = st.sidebar.multiselect("Sélectionner des colonnes à traiter dans le modèle  de régression de COX", data.columns)
+        cols = st.sidebar.multiselect("Sélectionner des colonnes à traiter dans le modèle  de régression de Cox", data.columns)
         col_duration = st.sidebar.selectbox("Sélectionner une colonne pour une durée ", data.columns)
         col_event = st.sidebar.selectbox("Sélectionner une colonne pour un événement", data.columns)
-        ent_tard = st.sidebar.checkbox("Consider les entrées tardive")
+        ent_tard = st.sidebar.checkbox("Considérer les entrées tardive")
         col_ent_tard = ""
         if ent_tard :
             col_ent_tard = st.sidebar.selectbox("Sélectionner une colonne pour les entrées tardives", data.columns)
@@ -990,7 +990,7 @@ if selected == "Modèle de régression de Cox" :
                 cph.plot()
                 st.pyplot(fig = plt)
             except :
-                st.error("Veuillez sélectionner bien des colonnes à traiter", icon="🚨")
+                st.error("Veuillez sélectionner bien des colonnes à traiter ainsi qu'une colonne de duration et celle d'événement", icon="🚨")
 
         st.subheader(":orange[Tracer l'effet de la variation d'une covariable]")
         if len(cols) != 0 :
