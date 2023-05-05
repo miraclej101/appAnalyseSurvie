@@ -1,92 +1,60 @@
-# appAnalyseSuivre
+# appAnalyseSurvie
+L'application d'analayse de survie est réalisée pendant l'unité d'enseignement de projet d'ingénierie des données (PID) à Polytech Lyon, France. L'application fournit plusieurs fonctionalités pour l'analyse de survie basée sur **Python v. 3.9.16, streamlit v. 1.21.0**.
 
+## Bibliothèques d'outil
+On emploit des bibliothèques suivantes pour la réalisation de l'application :
+- streamlit v. 1.21.0 pour faire facilement l'application web 
+- streamlit_option_menu v. 0.3.2 , l'interface graphique de menu pour streamlit
+- pandas v. 1.5.3, pour la manipulation de dataframe et serie de données
+- numpy v. 1.23.5, pour la manipulation de tableaux de données
+- matplotlib.pyplot v. 3.7.1 pour afficher des graphiques de données
+- lifelines v. 0.27.4 pour l’analyse de survie 
+- seaborn v. 0.12.2 pour afficher des jolis graphiques de données
 
+## Fonctionlités
+### 1. Lecture des données
+  Lire un fichier de CSV en saissisant un délimiter et sélectionnant l'un dans la liste de codec par un utilisateur. L'application aussi affiche 5 première lignes d'un dataframe. 
+### 2. Traitement des données manquantes
+  - Afficher le dataframe et un récapitulatif des noms de colonne, leur type de données et le nombre de données manquantes dans chaque colonne. 
+  - Transformer un type de donnée dans la colonne sélectionnée en l'un de la liste de types : **object, numérique, category, datetime, bool**. 
+  - Remplacer les données manquantes selon le cas suivant :
+     - Si c'est une colonne de type numérique, on peut les ramplacer par soit le mean soit le median soit le mode de la colonne.
+     - Si c'est une colonne de type non numérique, on peut les remplacer par la sélection d'une valeur de string dans la liste proposée aussi bien que l'application          affcihe le mode qui est la valeur qui apparaît le plus souvent pour le conseil (il peut y avoir plusieurs modes). De plus, on peut saisir un mot de notre choix        en sélectionnat "Autre" dans la liste au-dessus.
+  - Supprimer les lignes de données manquantes en critère choisi soit **any** soit **all** :
+     - any : Si des valeurs NA sont présentes, supprimez cette ligne. 
+     - all : Si toutes les valeurs sont NA, supprimez cette ligne.  
+  - Pareillement, supprimer les colonnes de données manquantes en critère soit **any** soit **all**.
+  - Enregistre cette transformation de données en fichier de CSV
+### 3. Statistiques descriptives
+   Afficher la description statistique du dataframe y inclus *count, mean, std, min, 25%, 50%, 75%, max*
+### 4. Représentations graphiques des variables
+  - Afficher automatiquement un graphique de corrélations de variables numériques.  
+  - Afficher un graphique du Pairplot qui place complètement les corrélations de variables en paire. Il faut sélectionner une colonne pour distinguer les graphiques en     couleurs.
+  - Afficher l'histogramme en choisissant une colonne cible , il y a une possiblité de tirer les données de la colonne cible par un critère choisi voire une colonne       non numérique et d'afficher séparément des histogrammes avec critère .
+### 5. Probabilités de survie et courbes de survie
+  L'application fournit un paramétrage pour la fonction de survie : **Kaplan-Meier**, la fonction risque : **Nelson-Aalen et Weibull**. Il faut sélectionner bien des     colonnes de la durée et de l'événement. D'ailleurs, il est possible de choisir un critère voire une colonne non numérique pour tirer les données ainsi que de           considérer l'entrée tardive dans l'analyse. En cas de l'entrée tardive, il faut sélectionner une colonne pour celle-ci qui a le sens de temps que la colonne de         duration. On peut afficher graphiquement les fonctions avec et sans intervalle de confiance sur grille et emsemble dans un seul graphique. L'application peut aussi :
+  - estimer et afficher la fonction de survie (Kaplan-Meier);
+  - estimer et afficher la fonction de risque cumulatif et la fonction de risque ou Hazard rate (Nelson-Aalen et modèle de Weibull). En cas de Nelson-Aalen, il faut       aussi sélectionner un bandwidth sur le widget de curseur (slider) pour lisser une courbe d'une estimation de la fonction de risque.
+### 6. Prédiction de survie d'un individu
+  Estimer la survie du modèle de Kaplan-Meier et de Weibull après un nombre de jour entré par utilisateur. D'ailleurs, le nombre de duration saisi maximumm est égal à   2 fois de la duration existante maximum. Il est nécessaire de sélectionner une colonne de duration et celle d'événement. Comme avant, il est possible de l'estimer     avec un critère ainsi que de considérer l'entrée tardive dans l'analyse. En cas de l'estimation avec critère, il faut choisir une valeur de la liste proposée afin de   tirer les données uniquement auxquelles on s'intéresse. On observe que la survie du modèle Kaplan-Meier est constante après le nombre de duration présente maximum     tandis que celle du modèle Weibull continue de varier car sa nature est un modèle paramétrique.
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://forge.univ-lyon1.fr/p2008633/appanalysesuivre.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://forge.univ-lyon1.fr/p2008633/appanalysesuivre/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### 7. Modèle de régression de Cox
+  C'est un modèle paramétrique que l'on peut affecter des colonnes supplémentaire (hors celles de durarion et d'événement) comme des paramètres du modèle.               L'application peut :
+  - convertir automatiquement les colonnes non numérique par **One-Hot Encoding** en variables factices/indicateurs. En effet chaque variable est convertie en autant       de variables 0/1 qu’il y a de différentes valeurs. Les colonnes de la sortie portent chacune le nom d’une valeur ; si l’entrée est un dataframe, le nom de la           variable d’origine est précédé de la valeur;
+  - afficher un dataframe transformé par **One-Hot Encoding**, sa description statistique et un récapitulatif (summary) du modèle. Produire une représentation visuelle     des coefficients (c.-à-d. log les hazard ratios), y compris leurs erreurs-types et leurs grandeurs;
+  - tracer l'effet de la variation d'une covariable. Il suffit de sélectionner une colonne de durée et d'événement, une colonne covariable ensuite les valeurs pour         tracer sont automatiquement calculée et affectée; 
+  - donner une comparaison de la courbe de référence du modèle par rapport à que se passe-t-il lorsqu’une ou plusieurs covariables varient sur les valeurs d’un groupe.     Ceci est utile pour comparer les sujets lorsque nous faisons varier la ou les covariables, toutes choses étant égales par ailleurs. La base de référence est égale     à la courbe y prévue pour toutes les valeurs moyennes de l’ensemble de données d’origine.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Le fichier requirements.txt contient les bilbiothèques nécesscaires avec leur version  pour l'installation. Merci de suivre les étapes suivantes :
+1. Créer un nouvel environnement virtuel dans le répertoire de travail. Consultez ce lien pour plus d'information [Install virtualenv (venv) and Jupyter
+](https://docs.google.com/document/d/1g6A5vbniN2ZoFUWaHJD35t9qiXS9raJ14hlzK4qot7g/edit)
+2. Activez ce virtualenv. 
+3. Exécutez ensuite la commande suivante :
+```
+pip3 install -r requirements.txt
+```
+  Il installera tout ce qui est répertorié dans le fichier requirements.txt en utilisant le numéro de version correct pour chaque package.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Auteurs et reconnaissance
+Le projet est réalisé par Malasri JANUMPORN et Rouguiyatou SOW, étudiantes de master MIAGE à Polytech Lyon. Merci M. BOUNEKKAR, l'enseignant de PID et le responsable de MIAGE pour nous avoir accompangné pendant le projet.
