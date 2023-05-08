@@ -64,9 +64,9 @@ with st.sidebar :
 # Main affichage
 selected = option_menu("Analyse de survie", ["Lecture des données", "Traitement des données manquantes", "Statistiques descriptives",
         "Représentations graphiques des variables","Probabilités de survie et courbes de survie","Prédiction de survie d'un individu",
-        "Modèle de régression de Cox","Analyse coût-efficacité"], 
+        "Modèle de régression de Cox"], 
         icons=['book-fill', 'file-spreadsheet-fill', "clipboard-data", 'bar-chart-fill',"graph-down","person-bounding-box",
-        "graph-up","currency-euro"], 
+        "graph-up"], 
         menu_icon="cast", default_index=0, orientation="horizontal",
         styles={   
         "container": {"padding": "0!important", "background-color": "#fafafa"},
@@ -638,6 +638,7 @@ def weibull(data, col_duration, col_event, montre_ci, crit, isGrid, col_ent_tard
             wbf.fit(data[col_duration], data[col_event])
             #Afficher summary de paramètres du modèle Weibull
             weibullPrintSummary(wbf)
+            #wbf.summary
             #Afficher la function risque cumulatif
             wbf.plot_cumulative_hazard(title = "La function risque cumulatif", ci_show = montre_ci, figsize = (8,4))
             st.pyplot(fig=plt)
@@ -660,6 +661,7 @@ def weibull(data, col_duration, col_event, montre_ci, crit, isGrid, col_ent_tard
             wbf.fit(data[col_duration], data[col_event], entry = data[col_ent_tard], label = "Modéle d'entrée tardive")
             #Afficher summary de paramètres du modèle Weibull
             weibullPrintSummary(wbf)
+            #wbf.summary
             ax = plt.subplot(1,1,1)
             wbf.plot_cumulative_hazard(ax = ax, title = "La function risque cumulatif", ci_show = montre_ci, figsize = (8,4))
             wbf.fit(data[col_duration], data[col_event], label = "Ignore les entrées tardives")
@@ -921,7 +923,7 @@ def weibullPredict(data, col_duration, col_event, crit, time_predict, col_ent_ta
         else :
             wbf.fit(newData[col_duration], newData[col_event], entry = newData[col_ent_tard])
     st.write("Le nombre de lignes de données impliquées = ", newData[col_duration].count())
-    predict = "{:.2f}".format(wbf.predict(time_predict, interpolate = True))
+    predict = "{:.2f}".format(wbf.predict(time_predict))
     st.markdown(f'<div {style_predict_box}>{predict}</div>', unsafe_allow_html=True)   
             
 #Rubrique Prédiction de survie d'un individu
@@ -991,6 +993,8 @@ if selected == "Modèle de régression de Cox" :
                 st.pyplot(fig = plt)
             except :
                 st.error("Veuillez sélectionner bien des colonnes à traiter ainsi qu'une colonne de duration et celle d'événement", icon="🚨")
+                if col_ent_tard != "" :
+                    st.error("Veuillez aussi sélectionner une colonne pour les entrées tardives à traiter dans le modèle de Cox", icon="🚨")
 
         st.subheader(":orange[Tracer l'effet de la variation d'une covariable]")
         if len(cols) != 0 :
@@ -1001,11 +1005,12 @@ if selected == "Modèle de régression de Cox" :
             #de même écart entre eux
             minVal = newData[covariable].min()
             maxVal = newData[covariable].max()
-            if minVal != 0 and maxVal != 1 :
-                sample = np.linspace(start = minVal, stop = maxVal, num = 5) 
-            else :
-            #Si c'est une colonne de category ou string, on prend 0 et 1 comme une variable binaire
+            if minVal == 0 and maxVal == 1 :
+                #Si c'est une colonne de category ou string, on prend 0 et 1 comme une variable binaire
                 sample = [0,1]
+            else :
+                # Une collone numérique, on prend 5 valeurs entre min et max inclusif
+                sample = np.linspace(start = minVal, stop = maxVal, num = 5) 
 
         st.warning("Veuillez sélectionner bien une colonne covariable",icon="⚠️" )
         if st.button("Afficher la fonction de survie") :

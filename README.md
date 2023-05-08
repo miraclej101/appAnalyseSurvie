@@ -45,6 +45,14 @@ On emploit des bibliothèques suivantes pour la réalisation de l'application :
   - tracer l'effet de la variation d'une covariable. Il suffit de sélectionner une colonne de durée et d'événement, une colonne covariable ensuite les valeurs pour         tracer sont automatiquement calculée et affectée; 
   - donner une comparaison de la courbe de référence du modèle par rapport à que se passe-t-il lorsqu’une ou plusieurs covariables varient sur les valeurs d’un groupe.     Ceci est utile pour comparer les sujets lorsque nous faisons varier la ou les covariables, toutes choses étant égales par ailleurs. La base de référence est égale     à la courbe y prévue pour toutes les valeurs moyennes de l’ensemble de données d’origine.
 
+## Captures d'écran
+[<img src="lecture_data.png" alt="Lecture des données" width="600"/>](lecture_data.png) [<img src="traitement_data.png" alt="Traitement des données manquantes" width="600"/>](traitement_data.png)
+[<img src="description_stats.png" alt="Statistiques descriptives" width="600"/>](description_stats.png)  [<img src="representation_graphique1.png" alt="Matrice de corrélation" width="600"/>](representation_graphique1.png)  
+[<img src="representation_graphique2.png" alt="Histogramme" width="600"/>](representation_graphique2.png)  [<img src="fonction_survie.png" alt="Fonction de survie" width="600"/>](fonction_survie.png) 
+[<img src="cumulatif_hazard_Nelson.png" alt="Hazard cumulatif Nelson Aalen" width="600"/>](cumulatif_hazard_Nelson.png)  [<img src="cumulatif_hazard_Weibull_grille.png" alt="Hazard cumulatif Weilbull sur la grille" width="600"/>](cumulatif_hazard_Weibull_grille.png) 
+[<img src="cumulatif_hazard_Weibull.png" alt="Hazard cumulatif Weilbull" width="600"/>](cumulatif_hazard_Weibull.png) [<img src="prediction_survie.png" alt="Prediction de survie" width="600"/>](prediction_survie.png) 
+[<img src="model_cox1.png" alt="Modèle de Cox plot coefficients" width="600"/>](model_cox1.png) [<img src="model_cox2.png" alt="Modèle de Cox tracer variation" width="600"/>](model_cox2.png) 
+
 ## Installation
 Le fichier requirements.txt contient les bilbiothèques nécesscaires avec leur version  pour l'installation. Merci de suivre les étapes suivantes :
 1. Créer un nouvel environnement virtuel dans le répertoire de travail. Consultez ce lien pour plus d'information [Install virtualenv (venv) and Jupyter
